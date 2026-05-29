@@ -1,0 +1,110 @@
+import datetime
+import functools
+import json
+import logging
+import re
+from collections.abc import Callable
+from string.templatelib import Interpolation, Template
+from typing import Any
+
+__all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
+
+log = logging.getLogger(__name__)
+
+
+class Parser[*T]:
+    def __init__(self, template: Template):
+        self.template = template
+        self.expression = f"^{
+            ''.join(
+                re.escape(item) if isinstance(item, str) else r'(.+?)'
+                for item in template
+            )
+        }$"
+        log.debug(f"match expression: {self.expression!r}")
+
+        self._match_re = re.compile(self.expression)
+
+    def parse(self, s: str) -> tuple[*T]:
+        m = self._match_re.match(s)
+        if m is None:
+            raise ValueError(f"Invalid format: {s!r}")
+
+        return tuple(
+            _convert(text, interpolation)
+            for text, interpolation in zip(m.groups(), self.template.interpolations)
+        )
+
+
+class parse[*T]:
+    """
+    Used to replace this function until [PEP 718](https://peps.python.org/pep-0718/) is accepted.
+
+    ```python
+    def parse[*T](t: Template, s: str) -> tuple[*T]:
+        return Parser(t).parse(s)
+    ```
+    """
+
+    def __new__(cls, t: Template, s: str) -> tuple[*T]:
+        return Parser(t).parse(s)
+
+
+class Conversion[T]:
+    __name__: str
+    __qualname__: str
+
+    def __init__(self, func: Callable[[str], T]) -> None:
+        self._convert = func
+        functools.update_wrapper(self, func)
+
+    def __call__(self, s: str) -> T:
+        return self._convert(s)
+
+
+class FormatConversion[T]:
+    __name__: str
+    __qualname__: str
+
+    def __init__(self, func: Callable[[str, str], T]) -> None:
+        self._convert = func
+        functools.update_wrapper(self, func)
+
+    def __call__(self, s: str, format: str) -> T:
+        return self._convert(s, format)
+
+
+def _convert(s: str, i: Interpolation[Any]) -> Any:
+    match i.value:
+        case Conversion():
+            return i.value(s)
+
+        case FormatConversion():
+            return i.value(s, i.format_spec)
+
+        case datetime.datetime:
+            return datetime.datetime.strptime(s, i.format_spec).astimezone(datetime.UTC)
+
+        case datetime.date:
+            return datetime.date.strptime(s, i.format_spec)
+
+        case datetime.time:
+            return datetime.time.strptime(s, i.format_spec)
+
+        case _ if i.value is int:
+            return int(s, base=int(i.format_spec) if i.format_spec else 0)
+
+        case _ if i.value is float:
+            return float(s)
+
+        case _ if i.value is complex:
+            return complex(s)
+
+        case _ if i.value is str:
+            return s
+
+        case _ if i.value is json:
+            return json.loads(s)
+
+        case _:
+            raise TypeError(f"unkown object: {i.value}")

@@ -1,0 +1,33 @@
+[project]
+name = "temparse"
+version = "0.0.1"
+license = "MIT"
+requires-python = ">=3.14"
+readme = "README.md"
+description = "temparse is template + parse"
+classifiers = [
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/jiang-zhexin/temparse"
+
+[[project.authors]]
+name = "jiang-zhexin"
+email = "162887873+jiang-zhexin@users.noreply.github.com"
+
+[build-system]
+requires = ["uv_build>=0.11.15,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "ruff>=0.15.15",
+    "ty>=0.0.40",
+]
