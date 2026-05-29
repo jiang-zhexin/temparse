@@ -1,6 +1,7 @@
 import datetime
 import json
 import math
+from typing import TypedDict
 
 from temparse import Conversion, FormatConversion, parse
 
@@ -41,14 +42,30 @@ def test_complex():
 
 
 def test_json():
-    (r,) = parse[list[int]](t"result is {json}", "result is [1, 2, 3]")
+    (r,) = parse[list[int]](t"result is {list}", "result is [1, 2, 3]")
     assert r == [1, 2, 3]
 
-    (r,) = parse[dict[str, int | str]](
-        t"result is {json}",
+    (r,) = parse[list[int]](t"result is {list[int]}", "result is [1, 2, 3]")
+    assert r == [1, 2, 3]
+
+    (r,) = parse[dict[str, int]](
+        t"result is {dict[str, int]}",
+        'result is {"a": 1, "b": 2}',
+    )
+    assert r == {"a": 1, "b": 2}
+
+    class MyDict(TypedDict):
+        a: int
+        b: str
+
+    (r,) = parse[MyDict](
+        t"result is {MyDict}",
         'result is {"a": 1, "b": "abc"}',
     )
     assert r == {"a": 1, "b": "abc"}
+
+    (r,) = parse(t"result is {json}", 'result is {"a": 1, "b": [1, 2, 3]}')
+    assert r == {"a": 1, "b": [1, 2, 3]}
 
 
 def test_datetime():

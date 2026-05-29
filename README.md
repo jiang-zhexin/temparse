@@ -36,18 +36,23 @@ The return type is `tuple[str, int]`.
 
 ## Supported Types
 
-| Interpolation                           | Example                  | Output               |
-| --------------------------------------- | ------------------------ | -------------------- |
-| `{str}`                                 | `"hello"`                | `"hello"`            |
-| `{int}`                                 | `"42"`                   | `42`                 |
-| `{int}`                                 | `"0xff"`                 | `255`                |
-| `{int:16}`                              | `"ff"`                   | `255`                |
-| `{float}`                               | `"3.14"`                 | `3.14`               |
-| `{complex}`                             | `"-1.23+4.5j"`           | `-1.23+4.5j`         |
-| `{json}`                                | `'[1,2,3]'`, `'{"a":1}'` | `[1,2,3]`, `{"a":1}` |
-| `{datetime.datetime:%d/%m/%y %H:%M:%S}` | `"31/01/22 23:59:59"`    | `datetime`           |
-| `{datetime.date:%Y-%m-%d}`              | `"2024-03-15"`           | `date`               |
-| `{datetime.time:%H:%M:%S}`              | `"13:23:27"`             | `time`               |
+| Interpolation                           | Example               | Output       |
+| --------------------------------------- | --------------------- | ------------ |
+| `{str}`                                 | `"hello"`             | `"hello"`    |
+| `{int}`                                 | `"42"`                | `42`         |
+| `{int}`                                 | `"0xff"`              | `255`        |
+| `{int:16}`                              | `"ff"`                | `255`        |
+| `{float}`                               | `"3.14"`              | `3.14`       |
+| `{complex}`                             | `"-1.23+4.5j"`        | `-1.23+4.5j` |
+| `{list}`                                | `'[1,2,3]'`           | `[1, 2, 3]`  |
+| `{dict}`                                | `'{"a":1}'`           | `{"a": 1}`   |
+| `{json}`                                | `'{"a":1}'`           | `{"a": 1}`   |
+| `{datetime.datetime:%d/%m/%y %H:%M:%S}` | `"31/01/22 23:59:59"` | `datetime`   |
+| `{datetime.date:%Y-%m-%d}`              | `"2024-03-15"`        | `date`       |
+| `{datetime.time:%H:%M:%S}`              | `"13:23:27"`          | `time`       |
+
+> [!IMPORTANT]
+> list and dict are just aliases for json.
 
 ## Custom Conversions
 

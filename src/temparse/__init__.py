@@ -5,7 +5,7 @@ import logging
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
-from typing import Any
+from typing import Any, get_origin, is_typeddict
 
 __all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
 
@@ -128,7 +128,8 @@ class FormatConversion[T]:
 
 
 def _convert(s: str, i: Interpolation[Any]) -> Any:
-    match i.value:
+    origin = get_origin(i.value) or i.value
+    match origin:
         case Conversion():
             return i.value(s)
 
@@ -144,19 +145,21 @@ def _convert(s: str, i: Interpolation[Any]) -> Any:
         case datetime.time:
             return datetime.time.strptime(s, i.format_spec)
 
-        case _ if i.value is int:
+        case _ if origin is int:
             return int(s, base=int(i.format_spec) if i.format_spec else 0)
 
-        case _ if i.value is float:
+        case _ if origin is float:
             return float(s)
 
-        case _ if i.value is complex:
+        case _ if origin is complex:
             return complex(s)
 
-        case _ if i.value is str:
+        case _ if origin is str:
             return s
 
-        case _ if i.value is json:
+        case _ if (
+            origin is list or origin is dict or origin is json or is_typeddict(origin)
+        ):
             return json.loads(s)
 
         case _:
