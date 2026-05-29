@@ -58,12 +58,12 @@ from temparse import Conversion, parse
 
 
 @Conversion
-def upper(s: str) -> str:
-    return s.upper()
+def percent(s: str) -> float:
+    return float(s.rstrip("%")) / 100
 
 
-(result,) = parse[str](t"{upper}", "hello")
-assert result == "HELLO"
+(result,) = parse[float](t"x = {percent}", "x = 30%")
+assert result == 0.3
 ```
 
 When your converter needs the format spec as well, use `FormatConversion`:

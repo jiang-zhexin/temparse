@@ -13,7 +13,18 @@ log = logging.getLogger(__name__)
 
 
 class Parser[*T]:
-    def __init__(self, template: Template):
+    """
+    A compiled template parser that can be reused to parse multiple strings.
+
+    example:
+    ```python
+    parser = Parser[str, int, float](t"{str} + {int} = {float}")
+
+    parser.parse("foo + 3 = 3.14")
+    ```
+    """
+
+    def __init__(self, template: Template) -> None:
         self.template = template
         self.expression = f"^{
             ''.join(
@@ -38,19 +49,46 @@ class Parser[*T]:
 
 class parse[*T]:
     """
-    Used to replace this function until [PEP 718](https://peps.python.org/pep-0718/) is accepted.
+    Parse string by template.
 
+    example:
     ```python
-    def parse[*T](t: Template, s: str) -> tuple[*T]:
-        return Parser(t).parse(s)
+    city, year = parse[str, int](
+        t"I live in {str}, since {int}", "I live in Tokyo, since 2010"
+    )
+    assert city == "Tokyo"
+    assert year == 2010
     ```
     """
 
     def __new__(cls, t: Template, s: str) -> tuple[*T]:
+        """
+        Used to replace this function until [PEP 718](https://peps.python.org/pep-0718/) is accepted.
+
+        ```python
+        def parse[*T](t: Template, s: str) -> tuple[*T]:
+            return Parser(t).parse(s)
+        ```
+        """
         return Parser(t).parse(s)
 
 
 class Conversion[T]:
+    """
+    Convert the string to your object.
+
+    example:
+    ```python
+    @Conversion
+    def percent(s: str) -> float:
+        return float(s.rstrip("%")) / 100
+
+
+    (result,) = parse[float](t"x = {percent}", "x = 30%")
+    assert result == 0.3
+    ```
+    """
+
     __name__: str
     __qualname__: str
 
@@ -63,6 +101,21 @@ class Conversion[T]:
 
 
 class FormatConversion[T]:
+    """
+    Convert the string to your object with format.
+
+    example:
+    ```python
+    @FormatConversion
+    def between(s: str, spec: str) -> str:
+        lo, hi = spec.split(",")
+        return s[int(lo) : int(hi)]
+
+    (result,) = parse[str](t"{between:2,5}", "abcdefg")
+    assert result == "cde"
+    ```
+    """
+
     __name__: str
     __qualname__: str
 
