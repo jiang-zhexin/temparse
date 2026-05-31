@@ -24,26 +24,27 @@ class Parser[*T]:
     ```
     """
 
-    def __init__(self, template: Template) -> None:
-        self.template = template
-        self.expression = f"^{
-            ''.join(
-                re.escape(item) if isinstance(item, str) else r'(.+?)'
-                for item in template
-            )
-        }$"
-        log.debug(f"match expression: {self.expression!r}")
+    def __init__(self, template: Template, flags: re.RegexFlag = re.NOFLAG) -> None:
+        self._template = template
+        self._flags = flags
+        self._expression = "".join(
+            re.escape(item) if isinstance(item, str) else r"(.+?)" for item in template
+        )
 
-        self._match_re = re.compile(self.expression)
+        log.debug(f"match expression: {self._expression!r}")
+
+    @functools.cached_property
+    def _match_re(self) -> re.Pattern[str]:
+        return re.compile(self._expression, self._flags)
 
     def parse(self, s: str) -> tuple[*T]:
-        m = self._match_re.match(s)
+        m = self._match_re.fullmatch(s)
         if m is None:
             raise ValueError(f"Invalid format: {s!r}")
 
         return tuple(
             _convert(text, interpolation)
-            for text, interpolation in zip(m.groups(), self.template.interpolations)
+            for text, interpolation in zip(m.groups(), self._template.interpolations)
         )
 
 
@@ -61,16 +62,16 @@ class parse[*T]:
     ```
     """
 
-    def __new__(cls, t: Template, s: str) -> tuple[*T]:
+    def __new__(cls, t: Template, s: str, flags: re.RegexFlag = re.NOFLAG) -> tuple[*T]:
         """
         Used to replace this function until [PEP 718](https://peps.python.org/pep-0718/) is accepted.
 
         ```python
-        def parse[*T](t: Template, s: str) -> tuple[*T]:
+        def parse[*T](t: Template, s: str, flags: re.RegexFlag = re.NOFLAG) -> tuple[*T]:
             return Parser(t).parse(s)
         ```
         """
-        return Parser(t).parse(s)
+        return Parser(t, flags).parse(s)
 
 
 class Conversion[T]:
