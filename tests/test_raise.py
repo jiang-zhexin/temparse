@@ -1,6 +1,11 @@
 import pytest
 
-from temparse import parse
+from temparse import Parser, parse
+
+
+def test_init():
+    with pytest.raises(ValueError):
+        Parser(t"some string without interpolations")
 
 
 def test_match():

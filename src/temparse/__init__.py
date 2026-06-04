@@ -25,6 +25,9 @@ class Parser[*T]:
     """
 
     def __init__(self, template: Template, flags: re.RegexFlag = re.NOFLAG) -> None:
+        if len(template.interpolations) == 0:
+            raise ValueError("template must contain at least one interpolation")
+
         self._template = template
         self._flags = flags
         self._expression = "".join(
@@ -40,7 +43,7 @@ class Parser[*T]:
     def parse(self, s: str) -> tuple[*T]:
         m = self._match_re.fullmatch(s)
         if m is None:
-            raise ValueError(f"Invalid format: {s!r}")
+            raise ValueError(f"invalid format: {s!r}")
 
         return tuple(
             _convert(text, interpolation)
