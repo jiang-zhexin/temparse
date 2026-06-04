@@ -1,0 +1,8 @@
+{
+  "languages": {
+    "Python": {
+      "language_servers": ["ty", "ruff"],
+      "formatter": "language_server",
+    },
+  },
+}
