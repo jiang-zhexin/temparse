@@ -1,15 +1,12 @@
 import datetime
 import functools
 import json
-import logging
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
 from typing import Any, get_origin, is_typeddict
 
 __all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
-
-log = logging.getLogger(__name__)
 
 
 class Parser[*T]:
@@ -33,8 +30,6 @@ class Parser[*T]:
         self._expression = "".join(
             re.escape(item) if isinstance(item, str) else r"(.+?)" for item in template
         )
-
-        log.debug(f"match expression: {self._expression!r}")
 
     @functools.cached_property
     def _match_re(self) -> re.Pattern[str]:
