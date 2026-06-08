@@ -4,11 +4,12 @@ import json
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
-from typing import Any, get_origin, is_typeddict
+from typing import Any, final, get_origin, is_typeddict
 
 __all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
 
 
+@final
 class Parser[*T]:
     """
     A compiled template parser that can be reused to parse multiple strings.
@@ -46,6 +47,7 @@ class Parser[*T]:
         )
 
 
+@final
 class parse[*T]:
     """
     Parse string by template.
@@ -72,6 +74,7 @@ class parse[*T]:
         return Parser(t, flags).parse(s)
 
 
+@final
 class Conversion[T]:
     """
     Convert the string to your object.
@@ -99,6 +102,7 @@ class Conversion[T]:
         return self._convert(s)
 
 
+@final
 class FormatConversion[T]:
     """
     Convert the string to your object with format.
