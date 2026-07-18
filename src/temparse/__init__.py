@@ -4,7 +4,7 @@ import json
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
-from typing import Any, final, get_origin, is_typeddict
+from typing import Any, cast, final, get_origin, is_typeddict
 
 __all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
 
@@ -41,9 +41,14 @@ class Parser[*T]:
         if m is None:
             raise ValueError(f"invalid format: {s!r}")
 
-        return tuple(
-            _convert(text, interpolation)
-            for text, interpolation in zip(m.groups(), self._template.interpolations)
+        return cast(
+            tuple[*T],
+            tuple(
+                _convert(text, interpolation)
+                for text, interpolation in zip(
+                    m.groups(), self._template.interpolations
+                )
+            ),
         )
 
 
@@ -71,7 +76,7 @@ class parse[*T]:
             return Parser(t).parse(s)
         ```
         """
-        return Parser(t, flags).parse(s)
+        return Parser[*T](t, flags).parse(s)
 
 
 @final
