@@ -23,9 +23,9 @@ homepage = "https://github.com/jiang-zhexin/temparse"
 
 [dependency-groups]
 dev = [
-  "pytest>=9.0.3",
-  "ruff>=0.15.15",
-  "ty>=0.0.43",
+  "pytest>=9.1.1",
+  "ruff>=0.15.22",
+  "ty>=0.0.61",
 ]
 
 [build-system]
