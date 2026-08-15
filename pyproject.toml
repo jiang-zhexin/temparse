@@ -24,10 +24,10 @@ homepage = "https://github.com/jiang-zhexin/temparse"
 [dependency-groups]
 dev = [
   "pytest>=9.1.1",
-  "ruff>=0.15.22",
+  "ruff>=0.16.0",
   "ty>=0.0.61",
 ]
 
 [build-system]
-requires = ["uv_build>=0.11.15,<0.12.0"]
+requires = ["uv_build>=0.12.0,<0.13.0"]
 build-backend = "uv_build"
