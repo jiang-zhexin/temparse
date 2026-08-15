@@ -96,9 +96,6 @@ class Conversion[T]:
     ```
     """
 
-    __name__: str
-    __qualname__: str
-
     def __init__(self, func: Callable[[str], T]) -> None:
         self._convert = func
         functools.update_wrapper(self, func)
@@ -123,9 +120,6 @@ class FormatConversion[T]:
     assert result == "cde"
     ```
     """
-
-    __name__: str
-    __qualname__: str
 
     def __init__(self, func: Callable[[str, str], T]) -> None:
         self._convert = func
