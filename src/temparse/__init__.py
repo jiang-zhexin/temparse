@@ -6,7 +6,17 @@ import json
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
-from typing import Any, Self, cast, dataclass_transform, final, get_origin, is_typeddict
+from typing import (
+    Any,
+    Literal,
+    Self,
+    cast,
+    dataclass_transform,
+    final,
+    get_origin,
+    is_typeddict,
+    overload,
+)
 
 __all__ = ["Conversion", "FormatConversion", "MatchStr", "Matcher", "Parser", "parse"]
 
@@ -38,9 +48,17 @@ class Parser[*T]:
     def _match_re(self) -> re.Pattern[str]:
         return re.compile(self._expression, self._flags)
 
-    def parse(self, s: str) -> tuple[*T]:
+    @overload
+    def parse(self, s: str, *, return_none: Literal[False] = False) -> tuple[*T]: ...
+
+    @overload
+    def parse(self, s: str, *, return_none: bool) -> tuple[*T] | None: ...
+
+    def parse(self, s: str, *, return_none: bool = False) -> tuple[*T] | None:
         m = self._match_re.fullmatch(s)
         if m is None:
+            if return_none:
+                return None
             raise ValueError(f"invalid format: {s!r}")
 
         return cast(
@@ -92,9 +110,8 @@ class _MatcherMeta(type):
         if not isinstance(instance, MatchStr):
             return False
 
-        try:
-            result = cls._parser.parse(instance)
-        except ValueError:
+        result = cls._parser.parse(instance, return_none=True)
+        if result is None:
             return False
 
         for k, v in zip(cls.__match_args__, result):

@@ -6,15 +6,15 @@ import pytest
 from temparse import Conversion, FormatConversion, Matcher, MatchStr, Parser
 
 
-class TheX(Matcher, parser=Parser(t"x={int}")):
+class TheX(Matcher, parser=Parser(t"x={int};")):
     x: int
 
 
-class TheY(Matcher, parser=Parser(t"y={str}")):
+class TheY(Matcher, parser=Parser(t"y={str};")):
     y: str
 
 
-class ThePoint(Matcher, parser=Parser(t"x={int}, y={str}, z={float}")):
+class ThePoint(Matcher, parser=Parser(t"x={int}; y={str}; z={float}")):
     x: int
     y: str
     z: float
@@ -39,9 +39,9 @@ def test_match_positional():
             case _:
                 return ("none", None)
 
-    assert match_point("x=1") == ("x", 1)
-    assert match_point("y=hello") == ("y", "hello")
-    assert match_point("x=1, y=hello, z=3.14") == ("point", (1, "hello", 3.14))
+    assert match_point("x=1;") == ("x", 1)
+    assert match_point("y=hello;") == ("y", "hello")
+    assert match_point("x=1; y=hello; z=3.14") == ("point", (1, "hello", 3.14))
     assert match_point("unknown") == ("none", None)
 
 
@@ -58,9 +58,9 @@ def test_match_keyword_and_literal():
             case _:
                 return "other"
 
-    assert check("x=0, y=origin, z=1.5") == "origin z=1.5"
-    assert check("x=5, y=test, z=0.0") == "positive x=5, y=test"
-    assert check("x=-5, y=test, z=0.0") == "other"
+    assert check("x=0; y=origin; z=1.5") == "origin z=1.5"
+    assert check("x=5; y=test; z=0.0") == "positive x=5, y=test"
+    assert check("x=-5; y=test; z=0.0") == "other"
 
 
 def test_match_conversions_and_types():
@@ -102,7 +102,7 @@ def test_match_conversions_and_types():
 
 
 def test_matcher_instance_and_parse():
-    p = ThePoint.parse("x=10, y=foo, z=2.5")
+    p = ThePoint.parse("x=10; y=foo; z=2.5")
     assert_type(p, ThePoint)
     assert_type(p.x, int)
     assert_type(p.y, str)
