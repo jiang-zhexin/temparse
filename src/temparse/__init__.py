@@ -1,3 +1,4 @@
+import builtins
 import datetime
 import functools
 import json
@@ -129,40 +130,43 @@ class FormatConversion[T]:
         return self._convert(s, format)
 
 
-def _convert(s: str, i: Interpolation[Any]) -> Any:
-    origin = get_origin(i.value) or i.value
+def _convert(s: str, interp: Interpolation[Any]) -> Any:
+    origin = get_origin(interp.value) or interp.value
     match origin:
         case Conversion():
-            return i.value(s)
+            return interp.value(s)
 
         case FormatConversion():
-            return i.value(s, i.format_spec)
+            return interp.value(s, interp.format_spec)
 
         case datetime.datetime:
-            return datetime.datetime.strptime(s, i.format_spec).astimezone(datetime.UTC)
+            return datetime.datetime.strptime(s, interp.format_spec).astimezone(
+                datetime.UTC
+            )
 
         case datetime.date:
-            return datetime.date.strptime(s, i.format_spec)
+            return datetime.date.strptime(s, interp.format_spec)
 
         case datetime.time:
-            return datetime.time.strptime(s, i.format_spec)
+            return datetime.time.strptime(s, interp.format_spec)
 
-        case _ if origin is int:
-            return int(s, base=int(i.format_spec) if i.format_spec else 0)
+        case builtins.int:
+            return int(s, base=int(interp.format_spec) if interp.format_spec else 0)
 
-        case _ if origin is float:
+        case builtins.float:
             return float(s)
 
-        case _ if origin is complex:
+        case builtins.complex:
             return complex(s)
 
-        case _ if origin is str:
+        case builtins.str:
             return s
 
-        case _ if (
-            origin is list or origin is dict or origin is json or is_typeddict(origin)
-        ):
+        case builtins.list | builtins.dict:
+            return json.loads(s)
+
+        case _ if origin is json or is_typeddict(origin):
             return json.loads(s)
 
         case _:
-            raise TypeError(f"unkown object: {i.value}")
+            raise TypeError(f"unkown object: {interp.value}")
