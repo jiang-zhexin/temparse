@@ -100,6 +100,53 @@ assert parser.parse("foo + 3 = 3.14") == ("foo", 3, 3.14)
 assert parser.parse("bar + 7 = 2.72") == ("bar", 7, 2.72)
 ```
 
+## `Matcher` (Pattern Matching & Structured Parsing)
+
+Subclass `Matcher` with a `Parser` to match strings in `match/case` statements or parse strings directly into structured instances:
+
+```python
+from temparse import Matcher, MatchStr, Parser
+
+class OkResp(Matcher, parser=Parser(t'code={int};message="{str}";')):
+    code: int
+    message: str
+
+class ErrResp(Matcher, parser=Parser(t'code={int};error="{str}";')):
+    code: int
+    error: str
+
+def handle_response(raw: str) -> str:
+    # Wrap the string with MatchStr to enable pattern matching
+    match MatchStr(raw):
+        case OkResp(code, message):
+            return f"OK ({code}): {message}"
+        case ErrResp(code, error):
+            return f"Error ({code}): {error}"
+        case _:
+            return "Unknown response"
+
+assert handle_response('code=200;message="success";') == "OK (200): success"
+assert handle_response('code=400;error="bad request";') == "Error (400): bad request"
+```
+
+`Matcher` subclasses are also dataclasses that support keyword matching and `.parse()`:
+
+```python
+from temparse import Matcher, MatchStr, Parser
+
+class Point(Matcher, parser=Parser(t"x={int}, y={int}")):
+    x: int
+    y: int
+
+p = Point.parse("x=1, y=2")
+assert p == Point(x=1, y=2)
+
+# Wrap the string with MatchStr to enable pattern matching
+match MatchStr("x=0, y=5"):
+    case Point(x=0, y=y):
+        assert y == 5
+```
+
 ## License
 
 MIT

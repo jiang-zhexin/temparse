@@ -1,13 +1,14 @@
 import builtins
+import dataclasses
 import datetime
 import functools
 import json
 import re
 from collections.abc import Callable
 from string.templatelib import Interpolation, Template
-from typing import Any, cast, final, get_origin, is_typeddict
+from typing import Any, Self, cast, dataclass_transform, final, get_origin, is_typeddict
 
-__all__ = ["Conversion", "FormatConversion", "Parser", "parse"]
+__all__ = ["Conversion", "FormatConversion", "MatchStr", "Matcher", "Parser", "parse"]
 
 
 @final
@@ -78,6 +79,90 @@ class parse[*T]:
         ```
         """
         return Parser[*T](t, flags).parse(s)
+
+
+@dataclass_transform()
+class _MatcherMeta(type):
+    _parser: Parser
+    __match_args__: tuple[str, ...]
+
+    def __instancecheck__(cls, instance: object) -> bool:
+        if super().__instancecheck__(instance):
+            return True
+        if not isinstance(instance, MatchStr):
+            return False
+
+        try:
+            result = cls._parser.parse(instance)
+        except ValueError:
+            return False
+
+        for k, v in zip(cls.__match_args__, result):
+            setattr(instance, k, v)
+        return True
+
+
+class Matcher(metaclass=_MatcherMeta):
+    """
+    Base class for structural pattern matching and structured template parsing.
+
+    example:
+    ```python
+    class OkResp(Matcher, parser=Parser(t'code={int};message="{str}";')):
+        code: int
+        message: str
+
+
+    class ErrResp(Matcher, parser=Parser(t'code={int};error="{str}";')):
+        code: int
+        error: str
+
+
+    match MatchStr('code=400;error="bad request";'):
+        case OkResp(code, message):
+            print(f"OK ({code}): {message}")
+        case ErrResp(code, error):
+            print(f"Error ({code}): {error}")
+    ```
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None: ...
+
+    def __init_subclass__(cls, parser: Parser) -> None:
+        super().__init_subclass__()
+        dataclasses.dataclass(cls)
+        cls._parser = parser
+        if len(cls.__match_args__) != len(parser._template.interpolations):
+            raise ValueError("number of fields must match template interpolations")
+
+    @classmethod
+    def parse(cls, s: str) -> Self:
+        """
+        Parse a string using the class's parser and return an instance of the class.
+
+        example:
+        ```python
+        p = Point.parse("x=1, y=2")
+        assert p == Point(x=1, y=2)
+        ```
+        """
+        return cls(*cls._parser.parse(s))
+
+
+class MatchStr(str):
+    """
+    A `str` subclass that enables structural pattern matching with `Matcher` subclasses.
+
+    example:
+    ```python
+    match MatchStr("x=1, y=2"):
+        case Point(x, y):
+            assert x == 1 and y == 2
+    ```
+    """
+
+    def __new__(cls, s: str, /) -> Self:
+        return super().__new__(cls, s)
 
 
 @final
