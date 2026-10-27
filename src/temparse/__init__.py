@@ -107,16 +107,7 @@ class _MatcherMeta(type):
     def __instancecheck__(cls, instance: object) -> bool:
         if super().__instancecheck__(instance):
             return True
-        if not isinstance(instance, MatchStr):
-            return False
-
-        result = cls._parser.parse(instance, return_none=True)
-        if result is None:
-            return False
-
-        for k, v in zip(cls.__match_args__, result):
-            setattr(instance, k, v)
-        return True
+        return isinstance(instance, MatchStr) and instance._match(cls)
 
 
 class Matcher(metaclass=_MatcherMeta):
@@ -178,8 +169,19 @@ class MatchStr(str):
     ```
     """
 
-    def __new__(cls, s: str, /) -> Self:
-        return super().__new__(cls, s)
+    def __init__(self, _: str, /) -> None:
+        self._cache: dict[_MatcherMeta, dict[str, Any] | None] = {}
+
+    def _match(self, cls: _MatcherMeta) -> bool:
+        if cls not in self._cache:
+            res = cls._parser.parse(self, return_none=True)
+            self._cache[cls] = (
+                dict(zip(cls.__match_args__, res)) if res is not None else None
+            )
+        if (fields := self._cache[cls]) is None:
+            return False
+        self.__dict__.update(fields)
+        return True
 
 
 @final

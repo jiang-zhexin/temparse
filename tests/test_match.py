@@ -117,3 +117,57 @@ def test_matcher_instance_and_parse():
             assert (x, y, z) == (10, "foo", 2.5)
         case _:
             pytest.fail("Expected ThePoint instance to match")
+
+
+def test_match_caches_parse_per_matcher():
+    calls = 0
+
+    @Conversion
+    def tracked_int(s: str) -> int:
+        nonlocal calls
+        calls += 1
+        return int(s)
+
+    class ErrResp(Matcher, parser=Parser(t'code={tracked_int};error="{str}";')):
+        code: int
+        error: str
+
+    def handle_response(raw: str) -> str:
+        match MatchStr(raw):
+            case ErrResp(400, error):
+                return f"Error (400): {error}"
+            case ErrResp(403, error):
+                return f"Error (403): {error}"
+            case ErrResp(500, error):
+                return f"Error (500): {error}"
+            case _:
+                return "Unknown response"
+
+    assert (
+        handle_response('code=500;error="server error";') == "Error (500): server error"
+    )
+    assert calls == 1
+
+    calls = 0
+    assert handle_response("invalid") == "Unknown response"
+    assert calls == 0
+
+
+def test_match_interleaved_overlapping_fields():
+    class TypeA(Matcher, parser=Parser(t"a={int};b={int}")):
+        val: int
+        other: int
+
+    class TypeB(Matcher, parser=Parser(t"a={int};b={int}")):
+        other: int
+        val: int
+
+    match MatchStr("a=1;b=2"):
+        case TypeA(99, _):
+            pytest.fail("Should not match val=99")
+        case TypeB(99, _):
+            pytest.fail("Should not match other=99")
+        case TypeA(1, other):
+            assert other == 2
+        case _:
+            pytest.fail("Expected TypeA(1, 2) to match")
