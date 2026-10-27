@@ -16,10 +16,8 @@ jobs:
       url: https://pypi.org/p/temparse
 
     steps:
-      - uses: actions/checkout@v6
-
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.2
 
       - run: uv build
-
       - run: uv publish

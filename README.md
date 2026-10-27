@@ -107,13 +107,16 @@ Subclass `Matcher` with a `Parser` to match strings in `match/case` statements o
 ```python
 from temparse import Matcher, MatchStr, Parser
 
+
 class OkResp(Matcher, parser=Parser(t'code={int};message="{str}";')):
     code: int
     message: str
 
+
 class ErrResp(Matcher, parser=Parser(t'code={int};error="{str}";')):
     code: int
     error: str
+
 
 def handle_response(raw: str) -> str:
     # Wrap the string with MatchStr to enable pattern matching
@@ -125,6 +128,7 @@ def handle_response(raw: str) -> str:
         case _:
             return "Unknown response"
 
+
 assert handle_response('code=200;message="success";') == "OK (200): success"
 assert handle_response('code=400;error="bad request";') == "Error (400): bad request"
 ```
@@ -134,9 +138,11 @@ assert handle_response('code=400;error="bad request";') == "Error (400): bad req
 ```python
 from temparse import Matcher, MatchStr, Parser
 
+
 class Point(Matcher, parser=Parser(t"x={int}, y={int}")):
     x: int
     y: int
+
 
 p = Point.parse("x=1, y=2")
 assert p == Point(x=1, y=2)
