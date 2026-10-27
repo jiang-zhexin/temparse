@@ -73,6 +73,14 @@ def test_datetime():
         t"Now is {datetime.datetime:%d/%m/%y %H:%M:%S.%f}",
         "Now is 31/01/22 23:59:59.999999",
     )
+    assert r == datetime.datetime(2022, 1, 31, 23, 59, 59, 999999).astimezone(
+        datetime.UTC
+    )
+
+    (r,) = parse[datetime.datetime](
+        t"Now is {datetime.datetime:%d/%m/%y %H:%M:%S.%f %z}",
+        "Now is 31/01/22 23:59:59.999999 +0800",
+    )
     assert r == datetime.datetime(2022, 1, 31, 15, 59, 59, 999999, tzinfo=datetime.UTC)
 
 
